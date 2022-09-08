@@ -19,14 +19,21 @@ Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 #include <nav_msgs/Odometry.h>
 #include "body.h"
 
-using namespace std;
+using namespace std; // TODO remove unnecessary namespace usage
 using namespace unitree_model;
 
 bool start_up = true;
 
+/**
+ * Class to assign topics to legs and their joints/foot and generate a lowState message from it
+ */
 class multiThread
 {
 public:
+    /**
+     * Constructor initializes the subscribers for all robot joints, feet and for the imu topic
+     * @param rname Robot name string as part of the topics
+     */
     multiThread(string rname){
         robot_name = rname;
         imu_sub = nm.subscribe("/trunk_imu", 1, &multiThread::imuCallback, this);
@@ -48,6 +55,10 @@ public:
         servo_sub[11] = nm.subscribe("/" + robot_name + "_gazebo/RL_calf_controller/state", 1, &multiThread::RLcalfCallback, this);
     }
 
+    /**
+     * Method populates the lowState message imu part
+     * @param msg incoming sensor message
+     */
     void imuCallback(const sensor_msgs::Imu & msg)
     { 
         lowState.imu.quaternion[0] = msg.orientation.w;
@@ -65,15 +76,23 @@ public:
         
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FRhipCallback(const unitree_legged_msgs::MotorState& msg)
     {
-        start_up = false;
+        start_up = false;                           // unclear, what this is for
         lowState.motorState[0].mode = msg.mode;
         lowState.motorState[0].q = msg.q;
         lowState.motorState[0].dq = msg.dq;
         lowState.motorState[0].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FRthighCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[1].mode = msg.mode;
@@ -82,6 +101,10 @@ public:
         lowState.motorState[1].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FRcalfCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[2].mode = msg.mode;
@@ -90,6 +113,10 @@ public:
         lowState.motorState[2].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FLhipCallback(const unitree_legged_msgs::MotorState& msg)
     {
         start_up = false;
@@ -99,6 +126,10 @@ public:
         lowState.motorState[3].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FLthighCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[4].mode = msg.mode;
@@ -107,6 +138,10 @@ public:
         lowState.motorState[4].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void FLcalfCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[5].mode = msg.mode;
@@ -115,6 +150,10 @@ public:
         lowState.motorState[5].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RRhipCallback(const unitree_legged_msgs::MotorState& msg)
     {
         start_up = false;
@@ -124,6 +163,10 @@ public:
         lowState.motorState[6].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RRthighCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[7].mode = msg.mode;
@@ -132,6 +175,10 @@ public:
         lowState.motorState[7].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RRcalfCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[8].mode = msg.mode;
@@ -140,6 +187,10 @@ public:
         lowState.motorState[8].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RLhipCallback(const unitree_legged_msgs::MotorState& msg)
     {
         start_up = false;
@@ -149,6 +200,10 @@ public:
         lowState.motorState[9].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RLthighCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[10].mode = msg.mode;
@@ -157,6 +212,10 @@ public:
         lowState.motorState[10].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState values for this particular joint
+     * @param msg incoming joint state
+     */
     void RLcalfCallback(const unitree_legged_msgs::MotorState& msg)
     {
         lowState.motorState[11].mode = msg.mode;
@@ -165,14 +224,22 @@ public:
         lowState.motorState[11].tauEst = msg.tauEst;
     }
 
+    /**
+     * Method to populate the lowState force values for this particular foot
+     * @param msg incoming foot state
+     */
     void FRfootCallback(const geometry_msgs::WrenchStamped& msg)
     {
-        lowState.eeForce[0].x = msg.wrench.force.x;
-        lowState.eeForce[0].y = msg.wrench.force.y;
-        lowState.eeForce[0].z = msg.wrench.force.z;
+        lowState.eeForce[0].x = msg.wrench.force.x; // unclear if eeForce is an existing value of the message
+        lowState.eeForce[0].y = msg.wrench.force.y; // possible other name: footForceEst but wrong type
+        lowState.eeForce[0].z = msg.wrench.force.z; // TODO check and maybe change
         lowState.footForce[0] = msg.wrench.force.z;
     }
 
+    /**
+     * Method to populate the lowState force values for this particular foot
+     * @param msg incoming foot state
+     */
     void FLfootCallback(const geometry_msgs::WrenchStamped& msg)
     {
         lowState.eeForce[1].x = msg.wrench.force.x;
@@ -181,6 +248,10 @@ public:
         lowState.footForce[1] = msg.wrench.force.z;
     }
 
+    /**
+     * Method to populate the lowState force values for this particular foot
+     * @param msg incoming foot state
+     */
     void RRfootCallback(const geometry_msgs::WrenchStamped& msg)
     {
         lowState.eeForce[2].x = msg.wrench.force.x;
@@ -189,6 +260,10 @@ public:
         lowState.footForce[2] = msg.wrench.force.z;
     }
 
+    /**
+     * Method to populate the lowState force values for this particular foot
+     * @param msg incoming foot state
+     */
     void RLfootCallback(const geometry_msgs::WrenchStamped& msg)
     {
         lowState.eeForce[3].x = msg.wrench.force.x;
@@ -203,18 +278,28 @@ private:
     string robot_name;
 };
 
+
+/**
+ * Program to connect publishers and subscribers to the robot
+ * May be extended with further logic
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "unitree_gazebo_servo");
+    ros::init(argc, argv, "unitree_gazebo_servo");  // Initialize ROS node
 
     string robot_name;
-    ros::param::get("/robot_name", robot_name);
+    ros::param::get("/robot_name", robot_name);     // retrieve robot name from ROS-param
     cout << "robot_name: " << robot_name << endl;
 
-    multiThread listen_publish_obj(robot_name);
+    multiThread listen_publish_obj(robot_name);     // Create multiThread object to subscribe to the topics
     ros::AsyncSpinner spinner(1); // one threads
     spinner.start();
     usleep(300000); // must wait 300ms, to get first state
+
+                                                    // Initialize the command publishers
 
     ros::NodeHandle n;
     ros::Publisher lowState_pub; //for rviz visualization
@@ -234,7 +319,7 @@ int main(int argc, char **argv)
     servo_pub[10] = n.advertise<unitree_legged_msgs::MotorCmd>("/" + robot_name + "_gazebo/RL_thigh_controller/command", 1);
     servo_pub[11] = n.advertise<unitree_legged_msgs::MotorCmd>("/" + robot_name + "_gazebo/RL_calf_controller/command", 1);
 
-    motion_init();
+    motion_init();                                  // function from body.cpp -> sends commands to init stand up
 
     while (ros::ok()){
         /*
