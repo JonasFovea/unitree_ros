@@ -58,6 +58,9 @@ void stand()
     moveAllPosition(pos, 2*1000); // why this duration? TODO maybe extract to defined constant
 }
 
+/**
+ * Function to initialize the messages and move into standing position
+ */
 void motion_init()
 {
     paramInit();
