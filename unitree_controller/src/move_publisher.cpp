@@ -8,6 +8,12 @@
 #include <math.h>
 #include <iostream>
 
+/**
+ * Program to publish a model state to move the simulated robot in a circle
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char **argv)
 {
     enum coord
