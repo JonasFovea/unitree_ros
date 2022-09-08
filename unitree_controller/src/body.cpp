@@ -73,17 +73,22 @@ void sendServoCmd()
     usleep(1000);
 }
 
+/**
+ * Function to move all motors to the given target position
+ * @param targetPos Array of 12 positional values for the leg joints
+ * @param duration Number of steps to split the movement into
+ */
 void moveAllPosition(double* targetPos, double duration)
 {
     double pos[12] ,lastPos[12], percent;
-    for(int j=0; j<12; j++) lastPos[j] = lowState.motorState[j].q;
-    for(int i=1; i<=duration; i++){
-        if(!ros::ok()) break;
-        percent = (double)i/duration;
-        for(int j=0; j<12; j++){
-            lowCmd.motorCmd[j].q = lastPos[j]*(1-percent) + targetPos[j]*percent; 
+    for(int j=0; j<12; j++) lastPos[j] = lowState.motorState[j].q;                  // Get the current position from the last state
+    for(int i=1; i<=duration; i++){                                                 // Loop for duration times
+        if(!ros::ok()) break;                                                       // Check if ROS is still running
+        percent = (double)i/duration;                                               // Calculate the progress percentage
+        for(int j=0; j<12; j++){                                                    // Loop over all joints in the LowCmd message
+            lowCmd.motorCmd[j].q = lastPos[j]*(1-percent) + targetPos[j]*percent;   // Set the next target position part
         }
-        sendServoCmd();
+        sendServoCmd();                                                             // Send the command to the servos
     }
 }
 
