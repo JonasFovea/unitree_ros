@@ -7,8 +7,8 @@ Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 
 namespace unitree_model {
 
-ros::Publisher servo_pub[12];
-unitree_legged_msgs::LowCmd lowCmd; //LowCmd message provided by the unitree_ros_to_real package
+ros::Publisher servo_pub[12];           // Publisher for all 12 joints to send MotorCmd messages
+unitree_legged_msgs::LowCmd lowCmd;     //LowCmd message provided by the unitree_ros_to_real package
 unitree_legged_msgs::LowState lowState; //LowState message provided by the unitree_ros_to_real package
 
 
@@ -84,8 +84,11 @@ void sendServoCmd()
  * Function to move all motors to the given target position
  * @param targetPos Array of 12 positional values for the leg joints
  * @param duration Number of steps to split the movement into
+ *          [!] the time is determined by the rate defined in sendServoCmd() -> default 1000us * duration
+ *          [!] setting the duration to a non integer value has no direct effect on the time needed but alters the last
+ *              angle step size
  */
-void moveAllPosition(double* targetPos, double duration)
+void moveAllPosition(double* targetPos, double duration) // TODO make duration an integer value
 {
     double pos[12] ,lastPos[12], percent;
     for(int j=0; j<12; j++) lastPos[j] = lowState.motorState[j].q;                  // Get the current position from the last state
