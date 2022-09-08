@@ -64,13 +64,17 @@ void motion_init()
     stand();
 }
 
+/**
+ * Function to publish the motor command message to the corresponding topic for each motor
+ * Sending rate is 1/1000 1/us
+ */
 void sendServoCmd()
 {
     for(int m=0; m<12; m++){
         servo_pub[m].publish(lowCmd.motorCmd[m]);
     }
     ros::spinOnce();
-    usleep(1000);
+    usleep(1000); // TODO make time a defined constant
 }
 
 /**
