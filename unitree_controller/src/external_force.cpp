@@ -17,6 +17,9 @@ Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 
 int mode = 1; // pulsed mode or continuous mode
 
+/**
+ * Class to send force commands from arrow key input
+ */
 class teleForceCmd
 {
 public:
@@ -30,48 +33,70 @@ private:
     geometry_msgs::Wrench Force;
 };
 
+/**
+ * Default constructor to initialize the force values and the publisher
+ */
 teleForceCmd::teleForceCmd()
 {
     Fx = 0;
     Fy = 0;
     Fz = 0;
-    force_pub = n.advertise<geometry_msgs::Wrench>("/apply_force/trunk", 20);
+    force_pub = n.advertise<geometry_msgs::Wrench>("/apply_force/trunk", 20);   // Initialize the publisher
     sleep(1);
-    pubForce(Fx, Fy, Fz);
+    pubForce(Fx, Fy, Fz);                                                       // Publish the initialized force values
 }
 
-int kfd = 0;
+int kfd = 0; // TODO make const
 struct termios cooked, raw;
 
+/**
+ * Signal handler to shutdown the terminal and the ROS node properly
+ * @param sig
+ */
 void quit(int sig)
 {
-    tcsetattr(kfd, TCSANOW, &cooked);
-    ros::shutdown();
-    exit(0);
+    tcsetattr(kfd, TCSANOW, &cooked);   // Unclear; probably quitting the terminal input
+    ros::shutdown();                    // Stopping the ROS node
+    exit(0);                            // Exiting the program
 }
 
+/**
+ * Main function to start the tele operation with the arrow keys
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char** argv)
 {
-    ros::init(argc, argv, "external_force");
-    teleForceCmd remote;
-    signal(SIGINT,quit);
-    remote.keyLoop();
+    ros::init(argc, argv, "external_force");    // Initialize ROS-node with name external_force
+    teleForceCmd remote;                        // Object of teleForceCmd to control the direction via arrow keys
+    signal(SIGINT,quit);                        // Set event handler for SIGINT to the quit() function
+    remote.keyLoop();                           // Run the keyboard input loop of the remote object
     return(0);
 }
 
+/**
+ * Method to publish a wrench message with the three given force values
+ * @param x Force in x-Direction
+ * @param y Force in y-Direction
+ * @param z Force in z-Direction
+ */
 void teleForceCmd::pubForce(double x, double y, double z)
 {
-    Force.force.x = Fx;
+    Force.force.x = Fx;         // populate message values
     Force.force.y = Fy;
     Force.force.z = Fz;
-    force_pub.publish(Force);
+    force_pub.publish(Force);   // publish message
     ros::spinOnce();
 }
 
+/**
+ * Method to read the arrow keys and send corresponding force values as wrench messages
+ */
 void teleForceCmd::keyLoop()
 {
-    char c;
-    bool dirty=false;
+    char c;             // Input character
+    bool dirty=false;   // Flag to determine if the current state was published or not
     // get the console in raw mode
     tcgetattr(kfd, &cooked);
     memcpy(&raw, &cooked, sizeof(struct termios));
@@ -150,16 +175,16 @@ void teleForceCmd::keyLoop()
             dirty = true;
             break;
         }
-        if(dirty == true){
-            pubForce(Fx, Fy, Fz);
-            if(mode > 0){
-                usleep(100000); // 100 ms
-                Fx = 0;
+        if(dirty == true){                  // TODO remove comparasion
+            pubForce(Fx, Fy, Fz);           // publish the given forces
+            if(mode > 0){                   // check for pulsed mode
+                usleep(100000); // 100 ms   // TODO make time a defined constant
+                Fx = 0;                     // reset the force values
                 Fy = 0;
                 Fz = 0;
-                pubForce(Fx, Fy, Fz);
+                pubForce(Fx, Fy, Fz);       // publish the default forces
             }
-            dirty=false;
+            dirty=false;                    // set flag to indicate the changes where published
         }
     }
     return;
