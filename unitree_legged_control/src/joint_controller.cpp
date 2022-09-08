@@ -12,17 +12,28 @@ Use of this source code is governed by the MPL-2.0 license, see LICENSE.
 namespace unitree_legged_control 
 {
 
+    /**
+     * Constructor initializes commands and states to zero
+     */
     UnitreeJointController::UnitreeJointController(){
-        memset(&lastCmd, 0, sizeof(unitree_legged_msgs::MotorCmd));
-        memset(&lastState, 0, sizeof(unitree_legged_msgs::MotorState));
-        memset(&servoCmd, 0, sizeof(ServoCmd));
+        memset(&lastCmd, 0, sizeof(unitree_legged_msgs::MotorCmd));     // initialize message with zeros
+        memset(&lastState, 0, sizeof(unitree_legged_msgs::MotorState)); // initialize message with zeros
+        memset(&servoCmd, 0, sizeof(ServoCmd));                         // initialize message with zeros
     }
 
+    /**
+     * Destructor shuts down subscribers
+     */
     UnitreeJointController::~UnitreeJointController(){
         sub_ft.shutdown();
         sub_cmd.shutdown();
     }
 
+    /**
+     * Method sets the torque from the messages wrench.torque.x/.y field
+     * The field is chosen whether isHip is true or false
+     * @param msg
+     */
     void UnitreeJointController::setTorqueCB(const geometry_msgs::WrenchStampedConstPtr& msg)
     {
         if(isHip) sensor_torque = msg->wrench.torque.x;
@@ -30,6 +41,10 @@ namespace unitree_legged_control
         // printf("sensor torque%f\n", sensor_torque);
     }
 
+    /**
+     * Method extracts values for the lastCmd from the message and writes the command
+     * @param msg motor command message
+     */
     void UnitreeJointController::setCommandCB(const unitree_legged_msgs::MotorCmdConstPtr& msg)
     {
         lastCmd.mode = msg->mode;
@@ -44,6 +59,12 @@ namespace unitree_legged_control
         command.writeFromNonRT(lastCmd);
     }
 
+    /**
+     * Method initializes the joint from given parameters via rosparam or urdf file and starts the subscribers
+     * @param robot
+     * @param n
+     * @return
+     */
     // Controller initialization in non-realtime
     bool UnitreeJointController::init(hardware_interface::EffortJointInterface *robot, ros::NodeHandle &n)
     {
@@ -97,22 +118,52 @@ namespace unitree_legged_control
         return true;
     }
 
+    /**
+     * Method to set the pid-controller values
+     * @param p
+     * @param i
+     * @param d
+     * @param i_max
+     * @param i_min
+     * @param antiwindup
+     */
     void UnitreeJointController::setGains(const double &p, const double &i, const double &d, const double &i_max, const double &i_min, const bool &antiwindup)
     {
         pid_controller_.setGains(p,i,d,i_max,i_min,antiwindup);
     }
 
+    /**
+     * Method sets the given references to the pid-controller values
+     * @param p
+     * @param i
+     * @param d
+     * @param i_max
+     * @param i_min
+     * @param antiwindup
+     */
     void UnitreeJointController::getGains(double &p, double &i, double &d, double &i_max, double &i_min, bool &antiwindup)
     {
         pid_controller_.getGains(p,i,d,i_max,i_min,antiwindup);
     }
 
+    /**
+     * Method sets the given references to the pid-controller values without antiwindup
+     * @param p
+     * @param i
+     * @param d
+     * @param i_max
+     * @param i_min
+     */
     void UnitreeJointController::getGains(double &p, double &i, double &d, double &i_max, double &i_min)
     {
         bool dummy;
         pid_controller_.getGains(p,i,d,i_max,i_min,dummy);
     }
 
+    /**
+     * Method initializes the last command and state and the pid-controller
+     * @param time
+     */
     // Controller startup in realtime
     void UnitreeJointController::starting(const ros::Time& time)
     {
@@ -130,6 +181,11 @@ namespace unitree_legged_control
         pid_controller_.reset();
     }
 
+    /**
+     * Method updates the current joint state
+     * @param time
+     * @param period
+     */
     // Controller update loop in realtime
     void UnitreeJointController::update(const ros::Time& time, const ros::Duration& period)
     {
@@ -205,18 +261,30 @@ namespace unitree_legged_control
     // Controller stopping in realtime
     void UnitreeJointController::stopping(){}
 
+    /**
+     * Limits the given position value to the upper or lower limit, if exceeded
+     * @param position
+     */
     void UnitreeJointController::positionLimits(double &position)
     {
         if (joint_urdf->type == urdf::Joint::REVOLUTE || joint_urdf->type == urdf::Joint::PRISMATIC)
             clamp(position, joint_urdf->limits->lower, joint_urdf->limits->upper);
     }
 
+    /**
+     * Limits the given velocity value to the upper or lower limit, if exceeded
+     * @param position
+     */
     void UnitreeJointController::velocityLimits(double &velocity)
     {
         if (joint_urdf->type == urdf::Joint::REVOLUTE || joint_urdf->type == urdf::Joint::PRISMATIC)
             clamp(velocity, -joint_urdf->limits->velocity, joint_urdf->limits->velocity);
     }
 
+    /**
+     * Limits the given effort value to the upper or lower limit, if exceeded
+     * @param position
+     */
     void UnitreeJointController::effortLimits(double &effort)
     {
         if (joint_urdf->type == urdf::Joint::REVOLUTE || joint_urdf->type == urdf::Joint::PRISMATIC)
