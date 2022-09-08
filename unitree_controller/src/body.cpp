@@ -48,11 +48,14 @@ void paramInit()
     }
 }
 
+/**
+ * Function to move all joints into standing position
+ */
 void stand()
 {   
     double pos[12] = {0.0, 0.67, -1.3, -0.0, 0.67, -1.3, 
-                      0.0, 0.67, -1.3, -0.0, 0.67, -1.3};
-    moveAllPosition(pos, 2*1000);
+                      0.0, 0.67, -1.3, -0.0, 0.67, -1.3}; // TODO make const
+    moveAllPosition(pos, 2*1000); // why this duration? TODO maybe extract to defined constant
 }
 
 void motion_init()
